@@ -1,0 +1,96 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+
+package modeventbridge.plugin.events;
+
+option csharp_namespace = "ModEventBridge.Plugin.EventSource";
+
+message Event {
+	// TargetID the id of the target (steramer)
+	string target_id = 1 [json_name="target_id"]; 
+	// TargetName the name of the target (streamer)
+	string target_name = 2 [json_name="target_name"];
+	// UserID the user id the the event is for
+	string user_id = 3 [json_name="user_id"];
+	// UserName the user name the event is for
+	string user_name = 4 [json_name="user_name"];
+	// EventType the type of the event
+	// EG: subscription, donation, points (twitch channel points), ect.
+	string event_type = 5 [json_name="event_type"];
+	// Platform the platform of the event
+	// EG: twitch, mixer, flocker, streamlabs, streamelemts, ect.
+	string platform = 6 [json_name="platform"];
+	// OccurredAt when the event occurred at
+	google.protobuf.Timestamp occurred_at = 7 [json_name="occurred_at"];
+	// Payload the raw payload of the event
+	string payload = 8 [json_name="playload"];
+	// the event data
+	oneof data_value {
+		DonationData donaton_data = 9 [json_name="data"];
+		PointsData points_data = 10 [json_name="data"];
+		SubscriptionData sub_data = 11 [json_name="data"];
+	}
+}
+
+message DonationData {
+	// Amount the amout used
+	int32 amount = 1 [json_name="amount"];
+	// DonationType the type of the donation (bits, embers, cents, ect.)
+	string donation_type = 2 [json_name="donation_type"];
+	// Message the message sent by the user (if available)
+	string message = 3 [json_name="message"];
+}
+
+message PointsData {
+	// RewardID the id of the reward being redeemed with points
+	string reward_id = 1 [json_name="reward_id"];
+	// RewardTtile the title of the reward
+	string reward_title = 2 [json_name="reward_title"];
+	// Cost the cost of the reward
+	string cost = 3 [json_name="cost"];
+	// Message the message entered by the user
+	string message = 4 [json_name="message"];
+}
+
+message SubscriptionData {
+	// Plan the plan identifier
+	string plan = 1 [json_name="plan"];
+	// PlanName the name of th plan
+	string plan_name = 2 [json_name="plan_name"];
+	// EventType the type of the subscription event (sub, resub, giftsub, ect)
+	string event_type = 3 [json_name="event_type"];
+	// CumulativeMonths the total number of months the user has subscribed
+	int32 cumulative_months = 4 [json_name="cumulative_months"];
+	// in a one of to allow for determining if the value is 0 or unset
+	oneof streak_months_value {
+		// StreakMonths the number of monts the user has subscribed consecutively
+		int32 streak_months = 5 [json_name="streak_months"];
+	}
+	// Message the message entered by the user
+	string message = 6 [json_name="message"];
+	// RecipientID the id of the recipient if the sub was gifted
+	string recipient_id = 7 [json_name="recipient_id"];
+	// RecipientUserName the user name of the recipient if the sub was gifted
+	string recipient_user_name = 8 [json_name="recipient_user_name"];
+	// RecipientDisplayName the display name of the recipient if the sub was gifted
+	string recipient_display_name = 9 [json_name="recipient_display_name"];
+}
+
+
+message StreamRequest {
+    // UserID the user id of the user to being listening to events for
+	string user_id = 1 [json_name="user_id"];
+	// RequestType to start or stop streaming events for a user
+	StreamRequestType request_type = 2 [json_name="request_type"];
+}
+
+enum StreamRequestType {
+	UNSET_STREAM_REQUEST_TYPE = 0;
+	START_STREAM_EVENTS = 1;
+	STOP_STREAM_EVENTS = 2;
+}
+
+service BridgeEvents {
+	// StreamEvents straems the events recieved from plugins
+	rpc StreamEvents(stream StreamRequest) returns (stream Event) {}
+}

@@ -3,7 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29521.150
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModEventBridge", "ModEventBridge\ModEventBridge.csproj", "{8B87C59B-15E3-4B0E-A7A2-54DE7D82C89D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModEventBridge", "ModEventBridge\ModEventBridge.csproj", "{8B87C59B-15E3-4B0E-A7A2-54DE7D82C89D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{67381E90-B19C-4848-B6F7-5811C1872F34}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Protobufs", "Protobufs", "{5CE12F47-74B8-4806-8322-45DE54E66511}"
+	ProjectSection(SolutionItems) = preProject
+		Protobufs\events.proto = Protobufs\events.proto
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModEventBridge.Plugin", "ModEventBridge.Plugin\ModEventBridge.Plugin.csproj", "{EF676561-D750-429E-8683-C786C02513F2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModEventBridge.TwitchPubsubPlugin", "ModEventBridge.TwitchPubsubPlugin\ModEventBridge.TwitchPubsubPlugin.csproj", "{418F31C3-DA04-4BD7-9F61-C70AA45C8332}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,9 +26,20 @@ Global
 		{8B87C59B-15E3-4B0E-A7A2-54DE7D82C89D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8B87C59B-15E3-4B0E-A7A2-54DE7D82C89D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8B87C59B-15E3-4B0E-A7A2-54DE7D82C89D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF676561-D750-429E-8683-C786C02513F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF676561-D750-429E-8683-C786C02513F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF676561-D750-429E-8683-C786C02513F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF676561-D750-429E-8683-C786C02513F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{418F31C3-DA04-4BD7-9F61-C70AA45C8332}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{418F31C3-DA04-4BD7-9F61-C70AA45C8332}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{418F31C3-DA04-4BD7-9F61-C70AA45C8332}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{418F31C3-DA04-4BD7-9F61-C70AA45C8332}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5CE12F47-74B8-4806-8322-45DE54E66511} = {67381E90-B19C-4848-B6F7-5811C1872F34}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5DBC143A-306F-4A4C-AFB9-2B0CDA87EC63}

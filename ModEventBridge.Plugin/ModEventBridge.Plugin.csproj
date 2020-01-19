@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Brenden Bowers</Authors>
+    <Company />
+    <Description>Classes for Event Bridge Plugins</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Protobufs\events.proto" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.11.2" />
+    <PackageReference Include="Grpc.Tools" Version="2.26.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.Threading.Channels" Version="4.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="EventSource\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="$(SolutionDir)\Protobufs\events.proto" GrpcServices="None" OutputDir=".\EventSource" />
+  </ItemGroup>
+
+</Project>
