@@ -1,0 +1,26 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+import "events.proto";
+
+package modeventbridge.plugin.events;
+
+option csharp_namespace = "ModEventBridge.Plugin.EventSource.Service";
+
+
+message StreamRequest {
+    // UserID the user id of the user to being listening to events for
+	string user_id = 1 [json_name="user_id"];
+	// RequestType to start or stop streaming events for a user
+	StreamRequestType request_type = 2 [json_name="request_type"];
+}
+
+enum StreamRequestType {
+	UNSET_STREAM_REQUEST_TYPE = 0;
+	START_STREAM_EVENTS = 1;
+	STOP_STREAM_EVENTS = 2;
+}
+
+service BridgeEvents {
+	// StreamEvents straems the events recieved from plugins
+	rpc StreamEvents(stream StreamRequest) returns (stream Event) {}
+}

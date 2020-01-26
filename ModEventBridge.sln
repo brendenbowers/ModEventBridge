@@ -10,11 +10,16 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Protobufs", "Protobufs", "{5CE12F47-74B8-4806-8322-45DE54E66511}"
 	ProjectSection(SolutionItems) = preProject
 		Protobufs\events.proto = Protobufs\events.proto
+		Protobufs\events_service.proto = Protobufs\events_service.proto
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModEventBridge.Plugin", "ModEventBridge.Plugin\ModEventBridge.Plugin.csproj", "{EF676561-D750-429E-8683-C786C02513F2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModEventBridge.TwitchPubsubPlugin", "ModEventBridge.TwitchPubsubPlugin\ModEventBridge.TwitchPubsubPlugin.csproj", "{418F31C3-DA04-4BD7-9F61-C70AA45C8332}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModEventBridge.Plugin.TwitchPubsub", "ModEventBridge.TwitchPubsubPlugin\ModEventBridge.Plugin.TwitchPubsub.csproj", "{418F31C3-DA04-4BD7-9F61-C70AA45C8332}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModEventBridge.Plugin.ConsoleOutput", "ModEventBridge.Plugin.ConsoleOutput\ModEventBridge.Plugin.ConsoleOutput.csproj", "{D7652731-5249-47D9-8F1C-8CC7A4C5063A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModEventBridge.Plugin.GrpcServiceOutput", "ModEventBridge.Plugin.GrpcServiceOutput\ModEventBridge.Plugin.GrpcServiceOutput.csproj", "{770B2601-E2CE-4567-98CE-23CE7933A5FC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,6 +39,14 @@ Global
 		{418F31C3-DA04-4BD7-9F61-C70AA45C8332}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{418F31C3-DA04-4BD7-9F61-C70AA45C8332}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{418F31C3-DA04-4BD7-9F61-C70AA45C8332}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7652731-5249-47D9-8F1C-8CC7A4C5063A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7652731-5249-47D9-8F1C-8CC7A4C5063A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7652731-5249-47D9-8F1C-8CC7A4C5063A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7652731-5249-47D9-8F1C-8CC7A4C5063A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{770B2601-E2CE-4567-98CE-23CE7933A5FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{770B2601-E2CE-4567-98CE-23CE7933A5FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{770B2601-E2CE-4567-98CE-23CE7933A5FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{770B2601-E2CE-4567-98CE-23CE7933A5FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

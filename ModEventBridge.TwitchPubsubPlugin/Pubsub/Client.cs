@@ -16,6 +16,7 @@ using ModEventBridge.TwitchPubsubPlugin.Pubsub.Events.ChannelPoints;
 using ModEventBridge.TwitchPubsubPlugin.Pubsub.Transforms;
 using ModEventBridge.TwitchPubsubPlugin.Pubsub.Events.Bits;
 using ModEventBridge.TwitchPubsubPlugin.Pubsub.Events.Subscription;
+using ModEventBridge.Plugin.TwitchPubsub.Pubsub.Events;
 
 namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
 {
@@ -27,13 +28,13 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
         protected ClientWebSocket client;
         protected CancellationTokenSource cts;
         protected Thread readerThread;
-        protected ConcurrentDictionary<string, ListenRequest> pendingListenReqs;
+        protected ConcurrentDictionary<string, ListenRequest> pendingListenReqs = new ConcurrentDictionary<string, ListenRequest>();
 
         protected DateTime lastPong = DateTime.MinValue;
         protected int pingsSincePong = 0;
 
         // The interval to ping in (default 4 mins)
-        public TimeSpan PingInterval { get; set; } = TimeSpan.FromMinutes(4);
+        public TimeSpan PingInterval { get; set; } = TimeSpan.FromSeconds(30);
 
 
         public ChannelReader<Event> Events => channel?.Reader;
@@ -60,6 +61,8 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
                     ct = (CancellationToken)data;
                 }
 
+                Task<WebSocketReceiveResult> readTask = null;
+                ArraySegment<byte> buffer;
                 while (!ct.IsCancellationRequested)
                 {
                     switch (client.State)
@@ -70,58 +73,94 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
                         case WebSocketState.Open:
                             break;
                         default:
+                        
+                            Console.WriteLine($"Invalid ws state: {client.State}. S: {client.CloseStatus}. D: {client.CloseStatusDescription}");
                             return;
 
                     }
-
-                    var buffer = new ArraySegment<byte>();
-                    var readTask = client.ReceiveAsync(buffer, ct);
-                    // use wait any to wait the task or timeout to a ping interval
-                    var waitRes = Task.WaitAny(new Task[] { readTask }, (int)PingInterval.TotalMilliseconds, ct);
+                    var cancelRead = new CancellationTokenSource((int)PingInterval.TotalMilliseconds);
+                    var lct = CancellationTokenSource.CreateLinkedTokenSource(ct, cancelRead.Token);
+                    WebSocketReceiveResult readRes = null;
+                    try
+                    {
+                        if(readTask == null)
+                        {
+                            buffer = new ArraySegment<byte>(new byte[2048]);
+                            readTask = client.ReceiveAsync(buffer, CancellationToken.None);
+                        }
+                        if (Task.WaitAll(new Task[]{ readTask }, PingInterval)) {
+                            readRes = readTask.Result;
+                            readTask = null;
+                        }
+                    } 
+                    catch(OperationCanceledException opex) when (!ct.IsCancellationRequested && cancelRead.IsCancellationRequested)
+                    {
+                        Console.WriteLine($"pinging... {readRes}");
+                        //eat the exception since it was caused by the time out to send a ping request
+                    }
+                    
                     if (ct.IsCancellationRequested)
                     {
+                        Console.WriteLine("Cancellation Requested");
                         break;
                     }
                     
-                    if(waitRes ==- 1 || lastPong.Add(PingInterval).AddSeconds(20) < DateTime.UtcNow)
+                    if(client.State != WebSocketState.Open)
+                    {
+                        // go back to the start and let the switch handle the state
+                        continue;
+                    }
+
+                    if(lastPong.Add(PingInterval) < DateTime.UtcNow)
                     {
                         pingsSincePong++;
                         await SendJson(Message.Ping);
-                        if(!readTask.IsCompleted)
-                        {
-                            readTask.Dispose();
-                            continue;
-                        }
                     }
 
-                    if (readTask.Result.CloseStatus != null)
+                    if (readRes == null)
                     {
+                        continue;
+                    }
+
+                    if (readRes?.CloseStatus != null)
+                    {
+                        Console.WriteLine($"closed: {readRes.CloseStatus}");
                         // handle close
                         return;
                     }
 
-                    var msg = FromArraySegement<Message>(buffer);
-                    switch(msg.Type)
+
+                    try
                     {
-                        case "PONG":
-                            lastPong = DateTime.UtcNow;
-                            pingsSincePong = 0;
-                            continue;
-                        case "RESPONSE":
-                            HandleResponseMessage(buffer);
-                            continue;
-                        case "MESSAGE":
-                            await HandleMessage(buffer);
-                            continue;
-                        case "reward-redeemed":
-                            await HandleRewardReedemed(buffer);
-                            continue;
-                        //default:
-                            //unhandled, log message
+                        var msg = FromArraySegement<Message>(buffer);
+                        switch (msg.Type)
+                        {
+                            case "PONG":
+                                lastPong = DateTime.UtcNow;
+                                pingsSincePong = 0;
+                                continue;
+                            case "RESPONSE":
+                                HandleResponseMessage(buffer);
+                                continue;
+                            case "MESSAGE":
+                                await HandleMessage(buffer);
+                                continue;
+                            case "reward-redeemed":
+                                await HandleRewardReedemed(buffer);
+                                continue;
+                                //default:
+                                //unhandled, log message
+                        }
+                    } 
+                    catch(Exception ex) 
+                    {
+                        Console.WriteLine($"Exception handling messge {ex.Message}\nTrace: {ex.StackTrace}");
                     }
+ 
 
                     if(pingsSincePong > 5)
                     {
+                        Console.WriteLine("too many missed pings");
                         // too many unanswered pings
                         return;
                     }
@@ -129,6 +168,7 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
             } catch (Exception ex)
             {
                 // todo: log this and do something
+                Console.WriteLine($"Websocket read thread error: {ex.Message} \n {ex.StackTrace}");
             }
 
 
@@ -137,32 +177,34 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
         protected void HandleResponseMessage(ArraySegment<byte> buffer)
         {
             var response = FromArraySegement<ListenResponse>(buffer);
-            if(response.Error == "")
+            var found = pendingListenReqs.FirstOrDefault((kv) => kv.Value.Nonce == response.Nonce);
+            if (found.Key == null && found.Value == null)
             {
-                var found = pendingListenReqs.FirstOrDefault((kv) => kv.Value.Nonce == response.Nonce);
-                if(found.Key == null && found.Value == null)
-                {
-                    // log and do somethning
-                    return;
-                }
-
-                pendingListenReqs.TryRemove(found.Key, out _);
-                userIDs.TryAdd(found.Key, found.Value.Data.Topics);
+                // log and do somethning
+                return;
             }
+            pendingListenReqs.TryRemove(found.Key, out _);
+            if (response.Error == "")
+            {                     
+                userIDs.TryAdd(found.Key, found.Value.Data.Topics);
+                Console.WriteLine($"User {found.Key} registered.");
+                return;
+            }
+            Console.WriteLine($"Error from Handle Response for user {found.Key}: {response.Error}. Topics: {string.Join(",",found.Value.Data.Topics)}");
             // handle error
         }
 
         protected ValueTask HandleMessage(ArraySegment<byte> buffer)
         {
             var dataMsg = FromArraySegement<TopicMessage>(buffer);
-            if(dataMsg.Message.Topic.StartsWith("channel-bits-events-v2"))
+            if(dataMsg.Data.Topic.StartsWith("channel-bits-events-v2"))
             {
-                return HandleBitsMessage(dataMsg.Message.Message);
+                return HandleBitsMessage(dataMsg.Data.Message);
             }
 
-            if(dataMsg.Message.Topic.StartsWith("channel-subscribe-events-v1"))
+            if(dataMsg.Data.Topic.StartsWith("channel-subscribe-events-v1"))
             {
-                return HandleSubMessage(dataMsg.Message.Message);
+                return HandleSubMessage(dataMsg.Data.Message);
             }
 
             // unhandled type, add logging
@@ -179,7 +221,7 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
 
         protected async ValueTask HandleBitsMessage(string data)
         {
-            var evt = JsonConvert.DeserializeObject<Bits>(data).ToEvent(data);
+            var evt = JsonConvert.DeserializeObject<DataMessage<Bits>>(data)?.Data?.ToEvent(data);
 
             await channel.Writer.WaitToWriteAsync(cts.Token);
             await channel.Writer.WriteAsync(evt, cts.Token);
@@ -187,7 +229,7 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
 
         protected async ValueTask HandleSubMessage(string data)
         {
-            var evt = JsonConvert.DeserializeObject<Subscription>(data).ToEvent(data);
+            var evt = JsonConvert.DeserializeObject<DataMessage<Subscription>>(data)?.Data?.ToEvent(data);
 
             await channel.Writer.WaitToWriteAsync(cts.Token);
             await channel.Writer.WriteAsync(evt, cts.Token);
@@ -207,6 +249,7 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
             if(client.State != WebSocketState.Open && client.State != WebSocketState.Connecting)
             {
                 await client.ConnectAsync(Target, cts.Token);
+                startThread = true;
             }
 
             if(userIDs.ContainsKey(userID) || pendingListenReqs.ContainsKey(userID))
@@ -246,7 +289,13 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
                 {
                     using(var jtr = new JsonTextReader(ss))
                     {
-                        return JsonSerializer.CreateDefault().Deserialize<T>(jtr);
+                        var o = JsonSerializer.CreateDefault().Deserialize<T>(jtr);
+                        if(ms.CanSeek)
+                        {
+                            ms.Seek(0, SeekOrigin.Begin);
+                            Console.WriteLine(ss.ReadToEnd());
+                        }
+                        return o;
                     }
                 }
             }
@@ -254,7 +303,8 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
 
         protected Task SendJson<T>(T data)
         {
-            return client.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(data))), WebSocketMessageType.Text, true, cts.Token);
+            var json = JsonConvert.SerializeObject(data);
+            return client.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(json)), WebSocketMessageType.Text, true, cts.Token);
         }
 
         private static Random random = new Random();

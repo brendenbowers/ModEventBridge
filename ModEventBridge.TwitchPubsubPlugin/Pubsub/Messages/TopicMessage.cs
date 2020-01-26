@@ -6,8 +6,8 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub.Messages
 {
     public class TopicMessage : Message
     {
-        [Newtonsoft.Json.JsonProperty("message")]
-        public TopicMessageData Message { get; set; }
+        [Newtonsoft.Json.JsonProperty("data")]
+        public TopicMessageData Data { get; set; }
 
         public TopicMessage() : base() { }
     }
