@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModEventBridge.Plugin.Conso
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModEventBridge.Plugin.GrpcServiceOutput", "ModEventBridge.Plugin.GrpcServiceOutput\ModEventBridge.Plugin.GrpcServiceOutput.csproj", "{770B2601-E2CE-4567-98CE-23CE7933A5FC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModEventBridge.Plugin.7DaysToStreamEmulator", "ModEventBridge.Plugin.7DaysToSTreamEmulator\ModEventBridge.Plugin.7DaysToStreamEmulator.csproj", "{FF7B15D4-6ECB-4561-8FCE-A381DE73A728}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,10 @@ Global
 		{770B2601-E2CE-4567-98CE-23CE7933A5FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{770B2601-E2CE-4567-98CE-23CE7933A5FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{770B2601-E2CE-4567-98CE-23CE7933A5FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF7B15D4-6ECB-4561-8FCE-A381DE73A728}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF7B15D4-6ECB-4561-8FCE-A381DE73A728}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF7B15D4-6ECB-4561-8FCE-A381DE73A728}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF7B15D4-6ECB-4561-8FCE-A381DE73A728}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

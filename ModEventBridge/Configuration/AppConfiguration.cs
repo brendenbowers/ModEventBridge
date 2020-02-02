@@ -8,7 +8,7 @@ namespace ModEventBridge.Configuration
     {
         public string PluginPath { get; set; }
 
-        public List<string> EventPlugins { get; set; }
-        public List<string> OutputPlugins { get; set; }
+        public List<PluginDetails> EventPlugins { get; set; }
+        public List<PluginDetails> OutputPlugins { get; set; }
     }
 }

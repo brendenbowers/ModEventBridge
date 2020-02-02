@@ -22,10 +22,12 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub.Events.Subscription
         public string SubPlan { get; set; }
         [Newtonsoft.Json.JsonProperty("sub_plan_name")]
         public string SubPlanName { get; set; }
-        [Newtonsoft.Json.JsonProperty("cumulative-months")]
+        [Newtonsoft.Json.JsonProperty("cumulative_months")]
         public int CumulativeMonths { get; set; }
-        [Newtonsoft.Json.JsonProperty("streak-months")]
+        [Newtonsoft.Json.JsonProperty("streak_months")]
         public int? StreakMonths { get; set; }
+        [Newtonsoft.Json.JsonProperty("months")]
+        public int Months { get; set; }
         [Newtonsoft.Json.JsonProperty("context")]
         public string Context { get; set; }
         [Newtonsoft.Json.JsonProperty("sub_message")]

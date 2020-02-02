@@ -1,10 +1,30 @@
 ﻿{
   "PluginPath": ".\\plugins",
-  "EventPlugins": [
+  /*"EventPlugins": [
     "ModEventBridge.Plugin.TwitchPubsub.Plugin.TwitchPubsubPlugin, ModEventBridge.Plugin.TwitchPubsub, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+  ],*/
+  "EventPlugins": [
+    {
+      "PluginName": "Plugin.Events.TwitchPubsub",
+      "TypeName": "ModEventBridge.Plugin.TwitchPubsub.Plugin.TwitchPubsubPlugin",
+      "AssemblyName": "ModEventBridge.Plugin.TwitchPubsub"
+    }
   ],
-  "OutputPlugins": [
+  /*"OutputPlugins": [
     "ModEventBridge.Plugin.ConsoleOutput.ConsoleOutputPlugin, ModEventBridge.Plugin.ConsoleOutput, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
     "ModEventBridge.Plugin.GrpcServiceOutput.GrpcServerOutputPlugin, ModEventBridge.Plugin.GrpcServiceOutput, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+  ]*/
+  "OutputPlugins": [
+    {
+      "PluginName": "Plugin.Output.ConsoleOutputPlugin",
+      "TypeName": "ModEventBridge.Plugin.ConsoleOutput.ConsoleOutputPlugin",
+      "AssemblyName": "ModEventBridge.Plugin.ConsoleOutput"
+    },
+    {
+      "PluginName": "Plugin.Output.GrpcServiceOutput",
+      "TypeName": "ModEventBridge.Plugin.GrpcServiceOutput.GrpcServerOutputPlugin",
+      "AssemblyName": "ModEventBridge.Plugin.GrpcServiceOutput"
+    }
   ]
+
 }

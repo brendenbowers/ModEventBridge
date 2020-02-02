@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ModEventBridge.Plugin.Plugin;
 
 namespace ModEventBridge.PluginManager
@@ -16,16 +17,25 @@ namespace ModEventBridge.PluginManager
 
         protected CancellationTokenSource cts;
 
+        protected readonly PluginLoader loader;
+        protected readonly ILogger logger;
+
         public PluginBridge() { }
 
-        public PluginBridge(List<IEventPlugin> eventPlugins, List<IOutputPlugin> outputPlugins) : this()
+        public PluginBridge(PluginLoader loader, ILogger<PluginBridge> logger) : this()
         {
-            EventPlugins = eventPlugins;
-            OutputPlugins = outputPlugins;
+            this.loader = loader;
+            this.logger = logger;
         }
 
-        public void Start()
+        public async ValueTask Start(bool loadPlugins = true)
         {
+            if(loadPlugins)
+            {
+                EventPlugins = await loader.LoadEventPlugins();
+                OutputPlugins = await loader.LoadOutputPlugins(this);
+            }
+
             cts = new CancellationTokenSource();
             foreach(var p in EventPlugins)
             {
@@ -35,9 +45,14 @@ namespace ModEventBridge.PluginManager
             }
         }
 
-        public void Stop()
+        public async ValueTask Stop()
         {
+
             cts.Cancel();
+            foreach (var d in OutputPlugins.FindAll(c => c is IAsyncDisposable).ConvertAll(c => c as IAsyncDisposable))
+            {
+                await d.DisposeAsync();
+            }
         }
 
         protected async void runner(object d)
@@ -57,7 +72,7 @@ namespace ModEventBridge.PluginManager
                             }
                             catch (Exception ex)
                             {
-                                Console.WriteLine($"Exception writing to plugin: {ex}");
+                                logger.LogError(ex, "Exception writing to plugin");
                             }
                         }
                     }

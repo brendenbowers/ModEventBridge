@@ -9,17 +9,27 @@ using System.Threading.Channels;
 using ModEventBridge.Plugin.EventSource;
 using System.Threading.Tasks;
 using System.IO;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ModEventBridge.Plugin.TwitchPubsub.Plugin
 {
     public class TwitchPubsubPlugin : IEventPlugin
     {
+        protected ILoggerFactory loggerFactory;
+        protected ILogger logger;
         Configuration.PluginConfiguration config;
         PubsubClient client;
 
         public ChannelReader<Event> Reader => client?.Events;
 
-        public IReadOnlyList<string> UserIDs => throw new NotImplementedException();
+        public IReadOnlyList<string> UserIDs => client == null ? new List<string>() : new List<string>(client.UserIDs);
+
+        public TwitchPubsubPlugin(ILoggerFactory loggerFactory = null)
+        {
+            this.loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
+            logger = loggerFactory.CreateLogger<TwitchPubsubPlugin>();
+        }
 
         public async ValueTask Initialize(string pluginPath)
         {
@@ -40,7 +50,9 @@ namespace ModEventBridge.Plugin.TwitchPubsub.Plugin
                 {
                     SingleWriter = true,
                     SingleReader = true
-                });
+                },
+                loggerFactory.CreateLogger<PubsubClient>()
+                );
 
 
             if (config.ListenToAuthedUsersOnInit)

@@ -50,38 +50,20 @@ namespace ModEventBridge.Plugin.EventSource {
             "IgoMcmVjaXBpZW50X2lkGAcgASgJUgxyZWNpcGllbnRfaWQSMAoTcmVjaXBp",
             "ZW50X3VzZXJfbmFtZRgIIAEoCVITcmVjaXBpZW50X3VzZXJfbmFtZRI2ChZy",
             "ZWNpcGllbnRfZGlzcGxheV9uYW1lGAkgASgJUhZyZWNpcGllbnRfZGlzcGxh",
-            "eV9uYW1lQhUKE3N0cmVha19tb250aHNfdmFsdWUifgoNU3RyZWFtUmVxdWVz",
-            "dBIYCgd1c2VyX2lkGAEgASgJUgd1c2VyX2lkElMKDHJlcXVlc3RfdHlwZRgC",
-            "IAEoDjIvLm1vZGV2ZW50YnJpZGdlLnBsdWdpbi5ldmVudHMuU3RyZWFtUmVx",
-            "dWVzdFR5cGVSDHJlcXVlc3RfdHlwZSpjChFTdHJlYW1SZXF1ZXN0VHlwZRId",
-            "ChlVTlNFVF9TVFJFQU1fUkVRVUVTVF9UWVBFEAASFwoTU1RBUlRfU1RSRUFN",
-            "X0VWRU5UUxABEhYKElNUT1BfU1RSRUFNX0VWRU5UUxACMnYKDEJyaWRnZUV2",
-            "ZW50cxJmCgxTdHJlYW1FdmVudHMSKy5tb2RldmVudGJyaWRnZS5wbHVnaW4u",
-            "ZXZlbnRzLlN0cmVhbVJlcXVlc3QaIy5tb2RldmVudGJyaWRnZS5wbHVnaW4u",
-            "ZXZlbnRzLkV2ZW50IgAoATABQiSqAiFNb2RFdmVudEJyaWRnZS5QbHVnaW4u",
-            "RXZlbnRTb3VyY2ViBnByb3RvMw=="));
+            "eV9uYW1lQhUKE3N0cmVha19tb250aHNfdmFsdWVCJKoCIU1vZEV2ZW50QnJp",
+            "ZGdlLlBsdWdpbi5FdmVudFNvdXJjZWIGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Google.Protobuf.WellKnownTypes.TimestampReflection.Descriptor, },
-          new pbr::GeneratedClrTypeInfo(new[] {typeof(global::ModEventBridge.Plugin.EventSource.StreamRequestType), }, new pbr::GeneratedClrTypeInfo[] {
+          new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::ModEventBridge.Plugin.EventSource.Event), global::ModEventBridge.Plugin.EventSource.Event.Parser, new[]{ "TargetId", "TargetName", "UserId", "UserName", "EventType", "Platform", "OccurredAt", "Payload", "DonatonData", "PointsData", "SubData" }, new[]{ "DataValue" }, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::ModEventBridge.Plugin.EventSource.DonationData), global::ModEventBridge.Plugin.EventSource.DonationData.Parser, new[]{ "Amount", "DonationType", "Message" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::ModEventBridge.Plugin.EventSource.PointsData), global::ModEventBridge.Plugin.EventSource.PointsData.Parser, new[]{ "RewardId", "RewardTitle", "Cost", "Message" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModEventBridge.Plugin.EventSource.SubscriptionData), global::ModEventBridge.Plugin.EventSource.SubscriptionData.Parser, new[]{ "Plan", "PlanName", "EventType", "CumulativeMonths", "StreakMonths", "Message", "RecipientId", "RecipientUserName", "RecipientDisplayName" }, new[]{ "StreakMonthsValue" }, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModEventBridge.Plugin.EventSource.StreamRequest), global::ModEventBridge.Plugin.EventSource.StreamRequest.Parser, new[]{ "UserId", "RequestType" }, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::ModEventBridge.Plugin.EventSource.SubscriptionData), global::ModEventBridge.Plugin.EventSource.SubscriptionData.Parser, new[]{ "Plan", "PlanName", "EventType", "CumulativeMonths", "StreakMonths", "Message", "RecipientId", "RecipientUserName", "RecipientDisplayName" }, new[]{ "StreakMonthsValue" }, null, null)
           }));
     }
     #endregion
 
   }
-  #region Enums
-  public enum StreamRequestType {
-    [pbr::OriginalName("UNSET_STREAM_REQUEST_TYPE")] UnsetStreamRequestType = 0,
-    [pbr::OriginalName("START_STREAM_EVENTS")] StartStreamEvents = 1,
-    [pbr::OriginalName("STOP_STREAM_EVENTS")] StopStreamEvents = 2,
-  }
-
-  #endregion
-
   #region Messages
   public sealed partial class Event : pb::IMessage<Event> {
     private static readonly pb::MessageParser<Event> _parser = new pb::MessageParser<Event>(() => new Event());
@@ -1401,169 +1383,6 @@ namespace ModEventBridge.Plugin.EventSource {
           }
           case 74: {
             RecipientDisplayName = input.ReadString();
-            break;
-          }
-        }
-      }
-    }
-
-  }
-
-  public sealed partial class StreamRequest : pb::IMessage<StreamRequest> {
-    private static readonly pb::MessageParser<StreamRequest> _parser = new pb::MessageParser<StreamRequest>(() => new StreamRequest());
-    private pb::UnknownFieldSet _unknownFields;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public static pb::MessageParser<StreamRequest> Parser { get { return _parser; } }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModEventBridge.Plugin.EventSource.EventsReflection.Descriptor.MessageTypes[4]; }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    pbr::MessageDescriptor pb::IMessage.Descriptor {
-      get { return Descriptor; }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public StreamRequest() {
-      OnConstruction();
-    }
-
-    partial void OnConstruction();
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public StreamRequest(StreamRequest other) : this() {
-      userId_ = other.userId_;
-      requestType_ = other.requestType_;
-      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public StreamRequest Clone() {
-      return new StreamRequest(this);
-    }
-
-    /// <summary>Field number for the "user_id" field.</summary>
-    public const int UserIdFieldNumber = 1;
-    private string userId_ = "";
-    /// <summary>
-    /// UserID the user id of the user to being listening to events for
-    /// </summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public string UserId {
-      get { return userId_; }
-      set {
-        userId_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
-      }
-    }
-
-    /// <summary>Field number for the "request_type" field.</summary>
-    public const int RequestTypeFieldNumber = 2;
-    private global::ModEventBridge.Plugin.EventSource.StreamRequestType requestType_ = 0;
-    /// <summary>
-    /// RequestType to start or stop streaming events for a user
-    /// </summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModEventBridge.Plugin.EventSource.StreamRequestType RequestType {
-      get { return requestType_; }
-      set {
-        requestType_ = value;
-      }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public override bool Equals(object other) {
-      return Equals(other as StreamRequest);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public bool Equals(StreamRequest other) {
-      if (ReferenceEquals(other, null)) {
-        return false;
-      }
-      if (ReferenceEquals(other, this)) {
-        return true;
-      }
-      if (UserId != other.UserId) return false;
-      if (RequestType != other.RequestType) return false;
-      return Equals(_unknownFields, other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public override int GetHashCode() {
-      int hash = 1;
-      if (UserId.Length != 0) hash ^= UserId.GetHashCode();
-      if (RequestType != 0) hash ^= RequestType.GetHashCode();
-      if (_unknownFields != null) {
-        hash ^= _unknownFields.GetHashCode();
-      }
-      return hash;
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public override string ToString() {
-      return pb::JsonFormatter.ToDiagnosticString(this);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public void WriteTo(pb::CodedOutputStream output) {
-      if (UserId.Length != 0) {
-        output.WriteRawTag(10);
-        output.WriteString(UserId);
-      }
-      if (RequestType != 0) {
-        output.WriteRawTag(16);
-        output.WriteEnum((int) RequestType);
-      }
-      if (_unknownFields != null) {
-        _unknownFields.WriteTo(output);
-      }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public int CalculateSize() {
-      int size = 0;
-      if (UserId.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(UserId);
-      }
-      if (RequestType != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) RequestType);
-      }
-      if (_unknownFields != null) {
-        size += _unknownFields.CalculateSize();
-      }
-      return size;
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public void MergeFrom(StreamRequest other) {
-      if (other == null) {
-        return;
-      }
-      if (other.UserId.Length != 0) {
-        UserId = other.UserId;
-      }
-      if (other.RequestType != 0) {
-        RequestType = other.RequestType;
-      }
-      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public void MergeFrom(pb::CodedInputStream input) {
-      uint tag;
-      while ((tag = input.ReadTag()) != 0) {
-        switch(tag) {
-          default:
-            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
-            break;
-          case 10: {
-            UserId = input.ReadString();
-            break;
-          }
-          case 16: {
-            RequestType = (global::ModEventBridge.Plugin.EventSource.StreamRequestType) input.ReadEnum();
             break;
           }
         }

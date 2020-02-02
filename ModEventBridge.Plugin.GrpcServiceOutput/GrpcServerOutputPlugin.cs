@@ -10,18 +10,24 @@ using ModEventBridge.Plugin.Plugin;
 using static ModEventBridge.Plugin.EventSource.Service.BridgeEvents;
 using Grpc.Core;
 using System.Threading;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ModEventBridge.Plugin.GrpcServiceOutput
 {
     public class GrpcServerOutputPlugin : BridgeEventsBase, IOutputPlugin, IAsyncDisposable
     {
+        protected ILoggerFactory loggerFactory;
+        protected ILogger logger;
         Configuration.PluginConfiguration config;
         protected Channel<Event> channel;
 
         protected Server grpcServer;
 
-        public GrpcServerOutputPlugin()
+        public GrpcServerOutputPlugin(ILoggerFactory loggerFactory = null)
         {
+            this.loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
+            logger = this.loggerFactory.CreateLogger<GrpcServerOutputPlugin>();
         }
 
         public ChannelWriter<Event> Writer => channel?.Writer;
@@ -67,43 +73,50 @@ namespace ModEventBridge.Plugin.GrpcServiceOutput
 
         public override async Task StreamEvents(IAsyncStreamReader<EventSource.Service.StreamRequest> requestStream, IServerStreamWriter<Event> responseStream, ServerCallContext context)
         {
-
-            var cancelWriter = new CancellationTokenSource();
-            var lts = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken, cancelWriter.Token);
-            var writerTask = Task.Run( async () => 
+            try
             {
-                while (!context.CancellationToken.IsCancellationRequested)
+                var cancelWriter = new CancellationTokenSource();
+                var lts = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken, cancelWriter.Token);
+                var writerTask = Task.Run(async () =>
                 {
-                    while( await channel.Reader.WaitToReadAsync(lts.Token))
+                    while (!context.CancellationToken.IsCancellationRequested)
                     {
-                        while(channel.Reader.TryRead(out var evt))
+                        while (await channel.Reader.WaitToReadAsync(lts.Token))
                         {
-                            await responseStream.WriteAsync(evt);
+                            while (channel.Reader.TryRead(out var evt))
+                            {
+                                await responseStream.WriteAsync(evt);
+                            }
+                        }
+                    }
+                }, lts.Token);
+
+                while (await requestStream.MoveNext(context.CancellationToken))
+                {
+                    if (UserEventPlugin != null)
+                    {
+                        switch (requestStream.Current.RequestType)
+                        {
+                            case EventSource.Service.StreamRequestType.StartStreamEvents:
+                                await UserEventPlugin.RegisterUser(requestStream.Current.UserId);
+                                break;
+                            case EventSource.Service.StreamRequestType.StopStreamEvents:
+                                await UserEventPlugin.DeregisterUser(requestStream.Current.UserId);
+                                break;
                         }
                     }
                 }
-            }, lts.Token);
 
-            while(await requestStream.MoveNext(context.CancellationToken))
-            {
-                if(UserEventPlugin != null)
+                cancelWriter.Cancel();
+                if (!writerTask.IsCanceled && !writerTask.IsCompleted && !writerTask.IsFaulted)
                 {
-                    switch (requestStream.Current.RequestType)
-                    {
-                        case EventSource.Service.StreamRequestType.StartStreamEvents:
-                            await UserEventPlugin.RegisterUser(requestStream.Current.UserId);
-                            break;
-                        case EventSource.Service.StreamRequestType.StopStreamEvents:
-                            await UserEventPlugin.DeregisterUser(requestStream.Current.UserId);
-                            break;
-                    }
-                }                
+                    writerTask.Dispose();
+                }
             }
-
-            cancelWriter.Cancel();
-            if(!writerTask.IsCanceled && !writerTask.IsCompleted && !writerTask.IsFaulted)
+            catch(Exception ex)
             {
-                writerTask.Dispose();
+                logger.LogError(ex, "Exception handling stream events");
+                throw;
             }
         }
 

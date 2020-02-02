@@ -5,15 +5,23 @@ using System.Text;
 using System.IO;
 using System.Reflection;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using System.Runtime.Loader;
 
 namespace ModEventBridge.PluginManager
 {
     public class PluginLoader
     {
-        public string PluginDir { get; set; }
-        public PluginLoader(string pluginDir)
+        public readonly Configuration.AppConfiguration Config;
+        public string PluginDir => Config.PluginPath;
+        protected ILoggerFactory loggerFactory;
+        protected ILogger logger;
+        public PluginLoader(Configuration.AppConfiguration config, ILoggerFactory loggerFactory)
         {
-            PluginDir = pluginDir;
+            Config = config;
+            this.loggerFactory = loggerFactory;
+            logger = this.loggerFactory.CreateLogger<PluginLoader>();
         }
 
         public List<LoadedPlugin<T>> GetPlugins<T>()
@@ -36,20 +44,71 @@ namespace ModEventBridge.PluginManager
             return plugins;
         }
 
+        // Loads and initializes event plugins
+        public ValueTask<List<IEventPlugin>> LoadEventPlugins() => LoadPlugins<IEventPlugin>(
+            lp => lp.Plugin.Initialize(lp.Path), 
+            Config.EventPlugins.ToArray());
 
-        public List<LoadedPlugin<T>> GetPluginsForTypes<T>(params string[] types)
+        // Loads and initializes output plugins
+        public ValueTask<List<IOutputPlugin>> LoadOutputPlugins(IUserEventPlugin userEventPlugin) => 
+            LoadPlugins<IOutputPlugin>(
+                lp => lp.Plugin.Initialize(lp.Path, userEventPlugin), 
+                Config.OutputPlugins.ToArray());
+
+        public async ValueTask<List<T>> LoadPlugins<T>(Func<LoadedPlugin<T>, ValueTask> init, params Configuration.PluginDetails[] types)
+            where T : class
+        {
+            var plugins = GetPluginsForTypes<T>(types);
+            var res = new List<T>(plugins.Count);
+            foreach(var lp in plugins)
+            {
+                await init(lp);
+                res.Add(lp.Plugin);
+            }
+
+            return res;
+        }
+
+        public List<LoadedPlugin<T>> GetPluginsForTypes<T>(params Configuration.PluginDetails[] types)
             where T : class
         {
             List<LoadedPlugin<T>> plugins = new List<LoadedPlugin<T>>();
-            foreach(var tn in types)
+            foreach(var pd in types)
             {
-                var t = Type.GetType(tn, FindAssembly, null);
+                var dll = FindDllForAssembly(pd.AssemblyName);
+                if (string.IsNullOrWhiteSpace(dll))
+                {
+                    logger.LogWarning($"Could not locate dll for plugin: {pd}");
+                    continue;
+                }
+                var resolver = new AssemblyDependencyResolver(Path.GetFullPath(dll));
+
+                var loadContext = new AssemblyLoadContext(pd.PluginName);
+                loadContext.Resolving += new Func<AssemblyLoadContext, AssemblyName, Assembly?>((AssemblyLoadContext ctx, AssemblyName an) =>
+                {
+                    var path = resolver.ResolveAssemblyToPath(an);
+                    if(string.IsNullOrWhiteSpace(path))
+                    {
+                        return null;
+                    }
+                    return ctx.LoadFromAssemblyPath(path);
+                });
+                var asym = loadContext.LoadFromAssemblyPath(dll);
+
+
+                var t = asym.GetType(pd.TypeName);
                 if (t?.GetInterfaces().Contains(typeof(T)) ?? false && !t.IsInterface && !t.IsAbstract)
                 {
-                    var plugin = t.GetConstructor(new Type[] { })?.Invoke(new object[] { }) as T;
+                    
+                    var plugin = t.GetConstructor(new Type[] { typeof(ILoggerFactory) })?.Invoke(new object[] { loggerFactory }) as T;
+                    if(plugin == null)
+                    {
+                        plugin = t.GetConstructor(new Type[] { })?.Invoke(new object[] { }) as T;
+                    }
+
                     if (plugin != null)
                     {
-                        plugins.Add(new LoadedPlugin<T> { Path = Path.GetDirectoryName(t.Assembly.Location), Plugin = plugin });
+                        plugins.Add(new LoadedPlugin<T> { Path = Path.GetDirectoryName(t.Assembly.Location), Plugin = plugin, LoadContext = loadContext });
                     }
                 }
             }

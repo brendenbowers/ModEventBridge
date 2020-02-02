@@ -17,12 +17,14 @@ using ModEventBridge.TwitchPubsubPlugin.Pubsub.Transforms;
 using ModEventBridge.TwitchPubsubPlugin.Pubsub.Events.Bits;
 using ModEventBridge.TwitchPubsubPlugin.Pubsub.Events.Subscription;
 using ModEventBridge.Plugin.TwitchPubsub.Pubsub.Events;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
 {
     public class PubsubClient
     {
-
+        protected ILogger logger;
         protected ConcurrentDictionary<string,List<string>> userIDs = new ConcurrentDictionary<string, List<string>>();
         protected Channel<Event> channel;
         protected ClientWebSocket client;
@@ -43,8 +45,9 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
 
         public ICollection<string> UserIDs => userIDs.Keys;
 
-        public PubsubClient(Uri uri, BoundedChannelOptions channelOpts = default)
+        public PubsubClient(Uri uri, BoundedChannelOptions channelOpts = default, ILogger logger = null)
         {
+            this.logger = logger ?? NullLogger.Instance;
             client = new ClientWebSocket();
             Target = uri;
             channel = Channel.CreateBounded<Event>(channelOpts);
@@ -73,8 +76,7 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
                         case WebSocketState.Open:
                             break;
                         default:
-                        
-                            Console.WriteLine($"Invalid ws state: {client.State}. S: {client.CloseStatus}. D: {client.CloseStatusDescription}");
+                            logger.LogDebug($"Invalid ws state: {client.State}. S: {client.CloseStatus}. D: {client.CloseStatusDescription}");
                             return;
 
                     }
@@ -95,13 +97,12 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
                     } 
                     catch(OperationCanceledException opex) when (!ct.IsCancellationRequested && cancelRead.IsCancellationRequested)
                     {
-                        Console.WriteLine($"pinging... {readRes}");
                         //eat the exception since it was caused by the time out to send a ping request
                     }
                     
                     if (ct.IsCancellationRequested)
                     {
-                        Console.WriteLine("Cancellation Requested");
+                        logger.LogDebug("Cancellation Requested");
                         break;
                     }
                     
@@ -124,7 +125,7 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
 
                     if (readRes?.CloseStatus != null)
                     {
-                        Console.WriteLine($"closed: {readRes.CloseStatus}");
+                        logger.LogDebug($"websocket closed: {readRes.CloseStatus} - {readRes.CloseStatusDescription}");
                         // handle close
                         return;
                     }
@@ -148,27 +149,27 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
                             case "reward-redeemed":
                                 await HandleRewardReedemed(buffer);
                                 continue;
-                                //default:
-                                //unhandled, log message
+                            default:
+                                logger.LogDebug($"Unknown message ({msg.Type}). {Encoding.UTF8.GetString(buffer.Array)}");
+                                continue;
                         }
                     } 
                     catch(Exception ex) 
                     {
-                        Console.WriteLine($"Exception handling messge {ex.Message}\nTrace: {ex.StackTrace}");
+                        logger.LogError(ex, "Exception handling message");
                     }
  
 
                     if(pingsSincePong > 5)
                     {
-                        Console.WriteLine("too many missed pings");
+                        logger.LogWarning("too many missed pings");
                         // too many unanswered pings
                         return;
                     }
                 }
             } catch (Exception ex)
             {
-                // todo: log this and do something
-                Console.WriteLine($"Websocket read thread error: {ex.Message} \n {ex.StackTrace}");
+                logger.LogError(ex, "Websocket read thread error");
             }
 
 
@@ -187,10 +188,10 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
             if (response.Error == "")
             {                     
                 userIDs.TryAdd(found.Key, found.Value.Data.Topics);
-                Console.WriteLine($"User {found.Key} registered.");
+                logger.LogInformation($"User {found.Key} registered.");
                 return;
             }
-            Console.WriteLine($"Error from Handle Response for user {found.Key}: {response.Error}. Topics: {string.Join(",",found.Value.Data.Topics)}");
+            logger.LogWarning($"Error from Handle Response for user {found.Key}: {response.Error}. Topics: {string.Join(",", found.Value.Data.Topics)}");
             // handle error
         }
 
@@ -229,7 +230,7 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
 
         protected async ValueTask HandleSubMessage(string data)
         {
-            var evt = JsonConvert.DeserializeObject<DataMessage<Subscription>>(data)?.Data?.ToEvent(data);
+            var evt = JsonConvert.DeserializeObject<Subscription>(data)?.ToEvent(data);
 
             await channel.Writer.WaitToWriteAsync(cts.Token);
             await channel.Writer.WriteAsync(evt, cts.Token);
@@ -293,7 +294,7 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub
                         if(ms.CanSeek)
                         {
                             ms.Seek(0, SeekOrigin.Begin);
-                            Console.WriteLine(ss.ReadToEnd());
+                            logger.LogDebug(ss.ReadToEnd());
                         }
                         return o;
                     }

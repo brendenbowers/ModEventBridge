@@ -16,7 +16,8 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub.Transforms
                 Plan = sub.SubPlan,
                 PlanName = sub.SubPlanName,
                 Message = sub.SubMessage.Message,
-                CumulativeMonths = sub.CumulativeMonths,
+                // sub gifts seem to use months instead of cumilative months
+                CumulativeMonths = sub.CumulativeMonths != 0 ? sub.CumulativeMonths : sub.Months,
                 RecipientId = sub.RecipientID ?? "",
                 RecipientUserName = sub.RecipientUserName ?? "",
                 RecipientDisplayName = sub.RecipientDisplayName ?? "",
@@ -32,11 +33,11 @@ namespace ModEventBridge.TwitchPubsubPlugin.Pubsub.Transforms
                 Payload = raw,
                 OccurredAt = Timestamp.FromDateTime(sub.Time),
                 Platform = "TWITCH",
-                EventType = sub.Context,
-                UserId = sub.UserID,
-                UserName = sub.UserName,
-                TargetId = sub.ChannelID,
-                TargetName = sub.ChannelName,
+                EventType = sub.Context ?? "",
+                UserId = sub.UserID ?? "",
+                UserName = sub.UserName ?? "",
+                TargetId = sub.ChannelID ?? "",
+                TargetName = sub.ChannelName ?? "",
                 SubData = subData,
             };
         }

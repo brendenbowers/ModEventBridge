@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Loader;
 using System.Text;
 
 namespace ModEventBridge.PluginManager
@@ -8,6 +9,6 @@ namespace ModEventBridge.PluginManager
     {
         public T Plugin { get; set; }
         public string Path { get; set; }
-        public AppDomain Domain { get; set; }
+        public AssemblyLoadContext LoadContext { get; set; }
     }
 }
